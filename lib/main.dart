@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:ffi';
 import 'dart:io';
+import 'package:data_gathering/item.dart';
+import 'package:data_gathering/item_model.dart';
 import 'package:image/image.dart' as img;
 import 'package:dio/dio.dart';
 
@@ -18,7 +21,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'data_gathering',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -60,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final _dropDownValues = ["TEST", "TEST2"];
   var _selected = "TEST";
   int _selectedIndex = 0;
+  late ItemModel itemModel;
 
   @override
   void initState() {
@@ -90,7 +93,20 @@ class _MyHomePageState extends State<MyHomePage> {
   ListView getListView() => ListView.separated(
         itemCount: widgets.length,
         itemBuilder: (BuildContext context, int position) {
-          return getRow(position);
+          return ListTile(
+              title: getRow(position),
+              onTap: () {
+                getOneItem(widgets[position]["itemId"]);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ItemScreen(
+                      itemModel: itemModel,
+                      image: images[position],
+                    ),
+                  ),
+                );
+              });
         },
         separatorBuilder: (BuildContext context, int index) {
           return Divider(thickness: 1);
@@ -160,6 +176,21 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  getOneItem(int id) async {
+    var dataURL = Uri.http("10.0.2.2:8080", "/item/$id");
+    http.Response response = await http.get(dataURL);
+    var body = jsonDecode(response.body);
+    ItemModel itemModel = ItemModel(
+        id: body["itemId"],
+        articleName: body["articleName"],
+        modelName: body["modelName"],
+        resolved: body["resolved"]);
+
+    setState(() {
+      this.itemModel = itemModel;
+    });
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -202,5 +233,36 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(child: getBody())
           ],
         ));
+  }
+}
+
+class ItemScreen extends StatelessWidget {
+  final ItemModel itemModel;
+  final Image image;
+
+  ItemScreen({super.key, required this.itemModel, required this.image});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'data_gathering',
+      theme: ThemeData(
+        colorScheme: const ColorScheme.light(),
+        // This is the theme of your application.
+        //
+        // Try running your application with "flutter run". You'll see the
+        // application has a blue toolbar. Then, without quitting the app, try
+        // changing the primarySwatch below to Colors.green and then invoke
+        // "hot reload" (press "r" in the console where you ran "flutter run",
+        // or simply save your changes to "hot reload" in a Flutter IDE).
+        // Notice that the counter didn't reset back to zero; the application
+        // is not restarted.
+        primarySwatch: Colors.blue,
+      ),
+      home: ItemPage(
+        itemModel: itemModel,
+        image: image,
+      ),
+    );
   }
 }
