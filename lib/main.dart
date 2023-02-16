@@ -57,14 +57,16 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> widgets = [];
   List<Image> images = [];
-
+  final _dropDownValues = ["TEST", "TEST2"];
+  var _selected = "TEST";
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    loadData();
+    loadData(_selected);
   }
+
   showLoadingDialog() {
     if (widgets.length == 0) {
       return true;
@@ -85,28 +87,69 @@ class _MyHomePageState extends State<MyHomePage> {
     return Center(child: CircularProgressIndicator());
   }
 
-  ListView getListView() => ListView.builder(
-      itemCount: widgets.length,
-      itemBuilder: (BuildContext context, int position) {
-        return getRow(position);
-      });
+  ListView getListView() => ListView.separated(
+        itemCount: widgets.length,
+        itemBuilder: (BuildContext context, int position) {
+          return getRow(position);
+        },
+        separatorBuilder: (BuildContext context, int index) {
+          return Divider(thickness: 1);
+        },
+      );
 
   Widget getRow(int i) {
-    return Row(children: [images[i],Column(children: <Widget>[Text("제품명: ${widgets[i]['articleName']}"), Text("모델명: ${widgets[i]['modelName']}")])]);
-
+    return Padding(
+        padding: const EdgeInsets.all(3.0),
+        child: Row(
+          children: [
+            Container(
+              height: 100,
+              width: 200,
+              child: images[i],
+            ),
+            Column(children: <Widget>[
+              Text("제품명: ${widgets[i]['articleName']}"),
+              Text("모델명: ${widgets[i]['modelName']}")
+            ]),
+          ],
+        ));
   }
-  loadData() async {
+
+  getDropDownMenu() {
+    return Padding(
+      padding: EdgeInsets.only(left: 10.0, right: 5.0),
+      child: Center(
+        child: DropdownButton(
+          value: _selected,
+          items: _dropDownValues.map((e) {
+            return DropdownMenuItem(
+              value: e,
+              child: Text(e),
+            );
+          }).toList(),
+          onChanged: (value) => setState(() {
+            _selected = value!;
+            loadData(value);
+          }),
+        ),
+      ),
+    );
+  }
+
+  loadData(String category) async {
     final queryParameters = {
-      'category': 'TEST2',
+      'category': category,
     };
     List<Image> imageList = [];
 
-    var dataURL = Uri.http("10.0.2.2:8080","/item",queryParameters);
+    var dataURL = Uri.http("10.0.2.2:8080", "/item", queryParameters);
     http.Response response = await http.get(dataURL);
     List items = jsonDecode(response.body)['content'];
     final dio = Dio();
     for (var element in items) {
-      final response = await dio.get("http://10.0.2.2:8080/item/image/${element['itemId']}",options: Options(responseType: ResponseType.bytes));
+      final response = await dio.get(
+          "http://10.0.2.2:8080/item/image/${element['itemId']}",
+          options: Options(responseType: ResponseType.bytes));
       Image image = Image.memory(response.data);
       imageList.add(image);
     }
@@ -126,9 +169,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Sample App"),
-        ),
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
@@ -144,6 +184,23 @@ class _MyHomePageState extends State<MyHomePage> {
           onTap: _onItemTapped,
           currentIndex: _selectedIndex,
         ),
-        body: getBody());
+        body: Column(
+          children: [
+            const SizedBox(
+              height: 20,
+            ),
+            Row(children: [
+              getDropDownMenu(),
+              Text(
+                _selected,
+                style: TextStyle(fontSize: 25),
+              ),
+            ]),
+            const Divider(
+              color: Colors.black,
+            ),
+            Expanded(child: getBody())
+          ],
+        ));
   }
 }
