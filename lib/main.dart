@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
+import 'package:image/image.dart' as img;
+import 'package:dio/dio.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -53,6 +56,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> widgets = [];
+  List<Image> images = [];
+
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -86,25 +92,57 @@ class _MyHomePageState extends State<MyHomePage> {
       });
 
   Widget getRow(int i) {
-    return Padding(padding: EdgeInsets.all(10.0), child: Text("Row ${i} ${widgets[i]['articleName']}"));
+    return Row(children: [images[i],Column(children: <Widget>[Text("제품명: ${widgets[i]['articleName']}"), Text("모델명: ${widgets[i]['modelName']}")])]);
+
   }
   loadData() async {
     final queryParameters = {
       'category': 'TEST2',
     };
+    List<Image> imageList = [];
+
     var dataURL = Uri.http("10.0.2.2:8080","/item",queryParameters);
     http.Response response = await http.get(dataURL);
-    log(response.body);
+    List items = jsonDecode(response.body)['content'];
+    final dio = Dio();
+    for (var element in items) {
+      final response = await dio.get("http://10.0.2.2:8080/item/image/${element['itemId']}",options: Options(responseType: ResponseType.bytes));
+      Image image = Image.memory(response.data);
+      imageList.add(image);
+    }
+
     setState(() {
-      var jsonDecode1 = jsonDecode(response.body);
-      widgets = jsonDecode1['content'];
+      widgets = jsonDecode(response.body)['content'];
+      images = imageList;
     });
   }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: Text("Sample App"),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.photo_camera),
+              label: 'photo',
+            ),
+          ],
+          selectedItemColor: Colors.amber[800],
+          onTap: _onItemTapped,
+          currentIndex: _selectedIndex,
         ),
         body: getBody());
   }
