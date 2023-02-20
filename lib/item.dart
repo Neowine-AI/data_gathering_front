@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'package:data_gathering/main.dart';
+import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:data_gathering/item_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ItemPage extends StatefulWidget {
   final ItemModel itemModel;
@@ -31,7 +34,7 @@ class _ItemPage extends State<ItemPage> {
   @override
   void initState() {
     _images.addAll([_image, _image_front, _image_back]);
-    print(_images.length);
+    print(widget.itemModel.id);
   }
 
   final picker = ImagePicker();
@@ -56,6 +59,7 @@ class _ItemPage extends State<ItemPage> {
                 child: _images[index] == null
                     ? const Text(
                         'No image selected.',
+                        textAlign: TextAlign.center,
                       )
                     : Image.file(File(_images[index]!.path)),
               ),
@@ -119,14 +123,28 @@ class _ItemPage extends State<ItemPage> {
             Container(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.width / 1.5,
-              child: PhotoView(imageProvider: widget.image.image),
+              child: PhotoView(
+                imageProvider: widget.image.image,
+                maxScale: PhotoViewComputedScale.covered * 1,
+              ),
             ),
             const SizedBox(
               height: 15,
             ),
             getItemInfo(),
-            const SizedBox(
+            const Divider(
+              thickness: 1,
+              indent: 20,
+              endIndent: 20,
+            ),
+            Container(
               height: 50,
+              padding: EdgeInsets.only(bottom: 10),
+              alignment: Alignment.bottomCenter,
+              child: Text(
+                "매칭 이미지",
+                style: TextStyle(fontSize: 18),
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -144,7 +162,9 @@ class _ItemPage extends State<ItemPage> {
               children: <Widget>[
                 FloatingActionButton(
                   heroTag: "take pic",
-                  child: Icon(Icons.add_a_photo),
+                  child: _images[selectedIndex] == null
+                      ? Icon(Icons.add_a_photo)
+                      : Icon(Icons.refresh),
                   tooltip: 'pick Iamge',
                   onPressed: () {
                     getImage(ImageSource.camera);
@@ -168,9 +188,35 @@ class _ItemPage extends State<ItemPage> {
         child: Icon(Icons.add),
         tooltip: 'pick Iamge',
         onPressed: () {
-          //매칭 생성 API 호출 (사진 같이)
+          final List<MultipartFile> files =
+              _images.map((e) => MultipartFile.fromFileSync(e!.path)).toList();
+          var data = FormData.fromMap({'images': files});
+          createMatching(data);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MyApp(),
+            ),
+          );
         },
       ),
     );
+  }
+
+  Future<dynamic> createMatching(dynamic input) async {
+    final prefs = await SharedPreferences.getInstance();
+    var dio = new Dio();
+    try {
+      dio.options.contentType = 'multipart/form-data';
+      dio.options.maxRedirects.isFinite;
+      dio.options.queryParameters = {'itemId': widget.itemModel.id};
+      dio.options.headers = {
+        'Authorization': 'Bearer ${prefs.getString("accessToken")}'
+      };
+
+      await dio.post("http://10.0.2.2:8080/matching", data: input);
+    } catch (e) {
+      print(e);
+    }
   }
 }
