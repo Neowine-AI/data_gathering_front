@@ -1,6 +1,8 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'package:data_gathering/main.dart';
 import 'package:dio/dio.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:data_gathering/item_model.dart';
@@ -44,27 +46,31 @@ class _ItemPage extends State<ItemPage> {
       child: Column(
         children: [
           InkWell(
-            onTap: () {
-              setState(() => selectedIndex = index);
-            },
-            child: Container(
-              decoration: index == selectedIndex
-                  ? BoxDecoration(
-                      color: Colors.black12,
-                      border: Border.all(color: Colors.black))
-                  : BoxDecoration(color: Colors.black12),
-              width: MediaQuery.of(context).size.width / 3.5,
-              height: MediaQuery.of(context).size.width / 3.5,
-              child: Center(
-                child: _images[index] == null
-                    ? const Text(
-                        'No image selected.',
-                        textAlign: TextAlign.center,
-                      )
-                    : Image.file(File(_images[index]!.path)),
-              ),
-            ),
-          ),
+              onTap: () {
+                setState(() => selectedIndex = index);
+              },
+              child: DottedBorder(
+                borderType: BorderType.RRect,
+                radius: Radius.circular(8),
+                dashPattern: index == selectedIndex ? [4, 1] : [8, 4],
+                strokeWidth: index == selectedIndex ? 2.5 : 1,
+                color: index == selectedIndex
+                    ? Color.fromARGB(255, 104, 239, 236)
+                    : Colors.black,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(8),
+                    image: DecorationImage(
+                        image: _images[index] == null
+                            ? Image.asset("assets/images/image.png").image
+                            : FileImage(File(_images[index]!.path)),
+                        fit: BoxFit.cover),
+                  ),
+                  width: MediaQuery.of(context).size.width / 3.5,
+                  height: MediaQuery.of(context).size.width / 3.5,
+                ),
+              )),
           Text(
             Angle.values[index].name,
             style: TextStyle(
@@ -183,24 +189,34 @@ class _ItemPage extends State<ItemPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: "create matching",
+      floatingActionButton: ElevatedButton(
         child: Icon(Icons.add),
-        tooltip: 'pick Iamge',
-        onPressed: () {
-          final List<MultipartFile> files =
-              _images.map((e) => MultipartFile.fromFileSync(e!.path)).toList();
-          var data = FormData.fromMap({'images': files});
-          createMatching(data);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MyApp(),
-            ),
-          );
-        },
+        onPressed: checkImages()
+            ? () {
+                final List<MultipartFile> files = _images
+                    .map((e) => MultipartFile.fromFileSync(e!.path))
+                    .toList();
+                var data = FormData.fromMap({'images': files});
+                createMatching(data);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MyApp(),
+                  ),
+                );
+              }
+            : null,
       ),
     );
+  }
+
+  checkImages() {
+    for (int i = 0; i < 3; i++) {
+      if (_images[i] == null) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Future<dynamic> createMatching(dynamic input) async {
