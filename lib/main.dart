@@ -9,6 +9,9 @@ import 'package:dio/dio.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'login_model.dart';
 
 void main() {
   runApp(const MyApp());
@@ -67,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    login();
     loadData(_selected);
   }
 
@@ -96,16 +100,16 @@ class _MyHomePageState extends State<MyHomePage> {
           return ListTile(
               title: getRow(position),
               onTap: () {
-                getOneItem(widgets[position]["itemId"]);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ItemScreen(
-                      itemModel: itemModel,
-                      image: images[position],
-                    ),
-                  ),
-                );
+                getOneItem(widgets[position]["itemId"])
+                    .then((value) => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ItemScreen(
+                              itemModel: itemModel,
+                              image: images[position],
+                            ),
+                          ),
+                        ));
               });
         },
         separatorBuilder: (BuildContext context, int index) {
@@ -176,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  getOneItem(int id) async {
+  Future<dynamic> getOneItem(int id) async {
     var dataURL = Uri.http("10.0.2.2:8080", "/item/$id");
     http.Response response = await http.get(dataURL);
     var body = jsonDecode(response.body);
@@ -233,6 +237,23 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(child: getBody())
           ],
         ));
+  }
+
+  Future<LoginModel?> login() async {
+    final prefs = await SharedPreferences.getInstance();
+    http.Response loginResponse = await http.post(
+        Uri.http("10.0.2.2:8080", "/member/login"),
+        headers: {"Content-Type": "application/json"},
+        body: '{"id":"1234@naver.com","password":"12345678"}');
+    if (loginResponse.statusCode == 200) {
+      final loginInfoParsed = json.decode(loginResponse.body);
+      print(loginInfoParsed);
+      final LoginModel loginInfo = LoginModel.fromJson(loginInfoParsed);
+      await prefs.setString('accessToken', loginInfo.accessToken);
+      await prefs.setString('refreshToken', loginInfo.refreshToken);
+      return loginInfo;
+    }
+    return null;
   }
 }
 
