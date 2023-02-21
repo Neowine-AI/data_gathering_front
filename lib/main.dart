@@ -4,6 +4,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:data_gathering/item.dart';
 import 'package:data_gathering/item_model.dart';
+import 'package:data_gathering/matching.dart';
 import 'package:image/image.dart' as img;
 import 'package:dio/dio.dart';
 
@@ -67,6 +68,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   late ItemModel itemModel;
 
+  final List<Widget> _widgetOptions = <Widget>[MatchingPage(), MatchingPage()];
+
   @override
   void initState() {
     super.initState();
@@ -94,6 +97,27 @@ class _MyHomePageState extends State<MyHomePage> {
     return Center(child: CircularProgressIndicator());
   }
 
+  Widget getItemBody() {
+    return Column(
+      children: [
+        const SizedBox(
+          height: 20,
+        ),
+        Row(children: [
+          getDropDownMenu(),
+          Text(
+            _selected,
+            style: TextStyle(fontSize: 25),
+          ),
+        ]),
+        const Divider(
+          color: Colors.black,
+        ),
+        Expanded(child: getBody())
+      ],
+    );
+  }
+
   ListView getListView() => ListView.separated(
         itemCount: widgets.length,
         itemBuilder: (BuildContext context, int position) {
@@ -119,20 +143,34 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget getRow(int i) {
     return Padding(
-        padding: const EdgeInsets.all(3.0),
-        child: Row(
-          children: [
-            Container(
-              height: 100,
-              width: 200,
-              child: images[i],
+      padding: const EdgeInsets.all(3.0),
+      child: Row(
+        children: [
+          Container(
+            height: 100,
+            width: 100,
+            child: images[i],
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  "${widgets[i]['articleName']}",
+                  style: const TextStyle(fontSize: 20),
+                ),
+                Text(
+                  "${widgets[i]['modelName']}",
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(fontSize: 12, color: Colors.black38),
+                ),
+              ],
             ),
-            Column(children: <Widget>[
-              Text("제품명: ${widgets[i]['articleName']}"),
-              Text("모델명: ${widgets[i]['modelName']}")
-            ]),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 
   getDropDownMenu() {
@@ -170,7 +208,10 @@ class _MyHomePageState extends State<MyHomePage> {
       final response = await dio.get(
           "http://10.0.2.2:8080/item/image/${element['itemId']}",
           options: Options(responseType: ResponseType.bytes));
-      Image image = Image.memory(response.data);
+      Image image = Image.memory(
+        response.data,
+        fit: BoxFit.cover,
+      );
       imageList.add(image);
     }
 
@@ -212,31 +253,16 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.photo_camera),
-              label: 'photo',
+              label: 'matching',
             ),
           ],
           selectedItemColor: Colors.amber[800],
           onTap: _onItemTapped,
           currentIndex: _selectedIndex,
         ),
-        body: Column(
-          children: [
-            const SizedBox(
-              height: 20,
-            ),
-            Row(children: [
-              getDropDownMenu(),
-              Text(
-                _selected,
-                style: TextStyle(fontSize: 25),
-              ),
-            ]),
-            const Divider(
-              color: Colors.black,
-            ),
-            Expanded(child: getBody())
-          ],
-        ));
+        body: _selectedIndex == 1
+            ? _widgetOptions[_selectedIndex]
+            : getItemBody());
   }
 
   Future<LoginModel?> login() async {
@@ -284,6 +310,18 @@ class ItemScreen extends StatelessWidget {
         itemModel: itemModel,
         image: image,
       ),
+    );
+  }
+}
+
+class MatchingScreen extends StatelessWidget {
+  MatchingScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'matching_screen',
+      home: MatchingPage(),
     );
   }
 }
