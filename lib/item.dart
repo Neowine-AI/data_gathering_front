@@ -190,7 +190,13 @@ class _ItemPage extends State<ItemPage> {
         ),
       ),
       floatingActionButton: ElevatedButton(
-        child: Icon(Icons.add),
+        child: Container(
+          width: 80,
+          child: Row(children: [
+            Icon(Icons.add),
+            Text("매칭 생성"),
+          ]),
+        ),
         onPressed: checkImages()
             ? () {
                 final List<MultipartFile> files = _images
@@ -206,6 +212,8 @@ class _ItemPage extends State<ItemPage> {
                 );
               }
             : null,
+        style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue, elevation: 10),
       ),
     );
   }
