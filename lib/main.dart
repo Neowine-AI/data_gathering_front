@@ -149,7 +149,12 @@ class _MyHomePageState extends State<MyHomePage> {
           Container(
             height: 100,
             width: 100,
-            child: images[i],
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: DecorationImage(
+                  image: images[i].image,
+                  fit: BoxFit.cover,
+                )),
           ),
           Padding(
             padding: EdgeInsets.only(left: 10),
