@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:data_gathering/matching_detail.dart';
 import 'package:data_gathering/matching_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -78,7 +79,15 @@ class _MatchingPage extends State<MatchingPage> {
           return ListTile(
               title: getRow(position),
               onTap: () {
-                null;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MatchingDetailScreen(
+                      matchingModel:
+                          MatchingModel.fromJson(matchings[position]),
+                    ),
+                  ),
+                );
               });
         },
         separatorBuilder: (BuildContext context, int index) {
@@ -91,18 +100,21 @@ class _MatchingPage extends State<MatchingPage> {
     return Scaffold(
         body: Column(
       children: [
-        SizedBox(height: 30),
-        Row(children: const [
-          Padding(
-            padding: EdgeInsets.only(left: 10),
-            child: Text(
-              "내 매칭 현황",
-              style: TextStyle(
-                fontSize: 20,
+        const SizedBox(height: 20),
+        Container(
+          height: 48,
+          child: Row(children: const [
+            Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text(
+                "내 매칭 현황",
+                style: TextStyle(
+                  fontSize: 25,
+                ),
               ),
             ),
-          ),
-        ]),
+          ]),
+        ),
         Divider(
           color: Colors.black,
         ),
@@ -142,5 +154,20 @@ class _MatchingPage extends State<MatchingPage> {
       matchings = body;
       matchingImages = imageList;
     });
+  }
+}
+
+class MatchingDetailScreen extends StatelessWidget {
+  final MatchingModel matchingModel;
+  MatchingDetailScreen({super.key, required this.matchingModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'matching_screen',
+      home: MatchingDetailPage(
+        matchingModel: matchingModel,
+      ),
+    );
   }
 }
