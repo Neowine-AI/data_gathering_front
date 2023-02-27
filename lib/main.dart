@@ -4,9 +4,11 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:data_gathering/item.dart';
 import 'package:data_gathering/item_model.dart';
+import 'package:data_gathering/login.dart';
 import 'package:data_gathering/matching.dart';
 import 'package:image/image.dart' as img;
 import 'package:dio/dio.dart';
+import 'package:transition/transition.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -37,7 +39,24 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: LoginScreen(),
+    );
+  }
+}
+
+class DashBoard extends StatelessWidget {
+  const DashBoard({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MyHomePage(
+        title: "main page",
+      ),
     );
   }
 }
@@ -73,7 +92,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    login();
     loadData(_selected);
   }
 
@@ -127,11 +145,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 getOneItem(widgets[position]["itemId"])
                     .then((value) => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => ItemScreen(
+                          Transition(
+                            child: ItemScreen(
                               itemModel: itemModel,
                               image: images[position],
                             ),
+                            transitionEffect: TransitionEffect.BOTTOM_TO_TOP,
                           ),
                         ));
               });
@@ -278,7 +297,6 @@ class _MyHomePageState extends State<MyHomePage> {
         body: '{"id":"1234@naver.com","password":"12345678"}');
     if (loginResponse.statusCode == 200) {
       final loginInfoParsed = json.decode(loginResponse.body);
-      print(loginInfoParsed);
       final LoginModel loginInfo = LoginModel.fromJson(loginInfoParsed);
       await prefs.setString('accessToken', loginInfo.accessToken);
       await prefs.setString('refreshToken', loginInfo.refreshToken);
