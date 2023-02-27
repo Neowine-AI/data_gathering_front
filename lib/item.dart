@@ -1,5 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'package:data_gathering/dioInterceptor.dart';
 import 'package:data_gathering/main.dart';
 import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -145,10 +146,12 @@ class _ItemPage extends State<ItemPage> {
             ),
             Container(
               height: 50,
-              padding: EdgeInsets.only(bottom: 10),
-              alignment: Alignment.bottomCenter,
+              padding: EdgeInsets.only(
+                bottom: 10,
+              ),
+              alignment: Alignment.center,
               child: Text(
-                "매칭 이미지",
+                "촬영 이미지",
                 style: TextStyle(fontSize: 18),
               ),
             ),
@@ -171,7 +174,7 @@ class _ItemPage extends State<ItemPage> {
                   child: _images[selectedIndex] == null
                       ? Icon(Icons.add_a_photo)
                       : Icon(Icons.refresh),
-                  tooltip: 'pick Iamge',
+                  tooltip: 'take picture',
                   onPressed: () {
                     getImage(ImageSource.camera);
                   },
@@ -179,7 +182,7 @@ class _ItemPage extends State<ItemPage> {
                 FloatingActionButton(
                   heroTag: "pick from gallery",
                   child: Icon(Icons.wallpaper),
-                  tooltip: 'pick Iamge',
+                  tooltip: 'pick image',
                   onPressed: () {
                     getImage(ImageSource.gallery);
                   },
@@ -190,13 +193,6 @@ class _ItemPage extends State<ItemPage> {
         ),
       ),
       floatingActionButton: ElevatedButton(
-        child: Container(
-          width: 80,
-          child: Row(children: [
-            Icon(Icons.add),
-            Text("매칭 생성"),
-          ]),
-        ),
         onPressed: checkImages()
             ? () {
                 final List<MultipartFile> files = _images
@@ -213,7 +209,17 @@ class _ItemPage extends State<ItemPage> {
               }
             : null,
         style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue, elevation: 10),
+            backgroundColor: Colors.blue,
+            elevation: 10,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10))),
+        child: SizedBox(
+          width: 60,
+          child: Row(children: const [
+            Icon(Icons.add),
+            Text("전송"),
+          ]),
+        ),
       ),
     );
   }
@@ -229,15 +235,47 @@ class _ItemPage extends State<ItemPage> {
 
   Future<dynamic> createMatching(dynamic input) async {
     final prefs = await SharedPreferences.getInstance();
-    var dio = new Dio();
+    var dio = Dio();
+    dio.interceptors.clear();
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.headers['Authorization'] =
+              "Bearer ${prefs.getString("accessToken")}";
+          return handler.next(options);
+        },
+        onError: (e, handler) async {
+          if (e.response?.statusCode == 401) {
+            final accessToken = await prefs.getString("accessToken");
+            final refreshToken = await prefs.getString("refreshToken");
+            var refreshDio = Dio();
+
+            refreshDio.interceptors.clear();
+
+            refreshDio.interceptors
+                .add(InterceptorsWrapper(onError: (error, handler) async {
+              // 다시 인증 오류가 발생했을 경우: RefreshToken의 만료
+              if (error.response?.statusCode == 401) {
+                // 기기의 자동 로그인 정보 삭제
+                await prefs.clear();
+
+                // . . .
+                // 로그인 만료 dialog 발생 후 로그인 페이지로 이동
+                // . . .
+              }
+              return handler.next(error);
+            }));
+
+            refreshDio.options.headers['Authorization'] = 'Bearer $accessToken';
+            refreshDio.options.headers['Refresh'] = 'Bearer $refreshToken';
+          }
+        },
+      ),
+    );
     try {
       dio.options.contentType = 'multipart/form-data';
       dio.options.maxRedirects.isFinite;
       dio.options.queryParameters = {'itemId': widget.itemModel.id};
-      dio.options.headers = {
-        'Authorization': 'Bearer ${prefs.getString("accessToken")}'
-      };
-
       await dio.post("http://10.0.2.2:8080/matching", data: input);
     } catch (e) {
       print(e);
