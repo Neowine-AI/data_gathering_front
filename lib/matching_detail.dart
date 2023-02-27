@@ -21,6 +21,8 @@ class MatchingDetailPage extends StatefulWidget {
 
 class _MatchingDetailPage extends State<MatchingDetailPage> {
   Map<String, Image> images = {};
+  int currentIndex = 0;
+  List<String> angles = ["front", "back", "top"];
 
   Future<Map<String, String>> getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -38,14 +40,12 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
 
   loadImage() async {
     Map<String, Image> imageList = {};
-    List<String> angles = ["front", "back", "top"];
     Map<String, String> header = await getHeaders();
 
     var dataURL =
         Uri.http("10.0.2.2:8080", "/matching/${widget.matchingModel.id}");
     http.Response response = await http.get(dataURL, headers: header);
     Map<String, dynamic> body = jsonDecode(response.body);
-    print(body);
     final dio = Dio();
     for (String angle in angles) {
       final queryParameters = {
@@ -79,32 +79,124 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
     );
   }
 
+  Widget getPhotoGallery() {
+    List<Image> imageList = [];
+    imageList.addAll(images.values);
+    return PhotoViewGallery.builder(
+      itemCount: images.length,
+      builder: (context, index) => PhotoViewGalleryPageOptions(
+          imageProvider: imageList[index].image,
+          initialScale: PhotoViewComputedScale.contained * 1),
+      loadingBuilder: (context, event) => Center(
+        child: Container(
+          width: 20.0,
+          height: 20.0,
+          child: CircularProgressIndicator(
+            value: event == null ? 0 : 1,
+          ),
+        ),
+      ),
+      backgroundDecoration: BoxDecoration(color: Colors.black),
+      pageController: PageController(),
+      onPageChanged: onPageChanged,
+    );
+  }
+
+  void onPageChanged(int index) {
+    setState(() {
+      currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: images.isEmpty
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Row(
-                  children: [
-                    getImageContainer("front"),
-                    getImageContainer("back"),
-                    getImageContainer("top"),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(right: 10),
-                      child: Text("매칭 현황: ${widget.matchingModel.status.name}"),
+          : Column(children: [
+              Stack(
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.width,
+                    child: getPhotoGallery(),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Text(
+                      "${this.angles[currentIndex]}",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17.0,
+                        decoration: null,
+                      ),
                     ),
-                  ],
-                ),
-                Divider(),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              Padding(
+                  padding: EdgeInsets.only(left: 10, right: 10, top: 10),
+                  child: Stack(
+                    children: [
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text.rich(
+                                  textAlign: TextAlign.start,
+                                  TextSpan(
+                                    text: "매칭 현황: ",
+                                    style: TextStyle(color: Colors.black),
+                                    children: <TextSpan>[
+                                      TextSpan(
+                                          text:
+                                              widget.matchingModel.status.name,
+                                          style: TextStyle(
+                                            color:
+                                                widget.matchingModel.status ==
+                                                        Status.CONFIRMED
+                                                    ? Colors.green
+                                                    : Colors.orange,
+                                          )),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Icon(Icons.menu),
+                            ],
+                          ),
+                          Divider(
+                            thickness: 1,
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                '작성자: ${widget.matchingModel.memberName}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              widget.matchingModel.status == Status.REJECTED
+                                  ? Text(
+                                      "반려 사유: ${widget.matchingModel.rejectMessage}",
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(fontSize: 15),
+                                    )
+                                  : SizedBox(
+                                      height: 10,
+                                    ),
+                            ],
+                          )
+                        ],
+                      ),
+                    ],
+                  )),
+            ]),
     );
   }
 }
