@@ -11,4 +11,12 @@ class ItemModel {
       required this.articleName,
       required this.modelName,
       required this.resolved});
+
+  factory ItemModel.fromJson(Map<String, dynamic> json) {
+    return ItemModel(
+        id: json["itemId"],
+        articleName: json["articleName"],
+        modelName: json["modelName"],
+        resolved: json["resolved"]);
+  }
 }

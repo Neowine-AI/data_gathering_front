@@ -1,8 +1,8 @@
-import 'dart:convert';
-import 'dart:developer';
+import 'dart:math';
+
+import 'package:data_gathering/dashboard.dart';
 
 import 'package:data_gathering/Dios.dart';
-import 'package:data_gathering/main.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
@@ -15,14 +15,17 @@ const users = const {
   'hunter@gmail.com': 'hunter',
 };
 
-class LoginScreen extends StatelessWidget {
-  // Future<LoginModel> Login() async {
-  //   Dio dio = Dio();
-  //   return null;
-  // }
+class LoginScreen extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _LoginPage();
+  }
+}
+
+class _LoginPage extends State<LoginScreen> {
   Duration get loginTime => Duration(milliseconds: 2250);
 
-  Future<String?> test(LoginData data) async {
+  Future<String?> login(LoginData data) async {
     var requestBody = {'id': data.name, 'password': data.password};
     var dio = await noAuthDio();
     dio.interceptors.add(
@@ -51,12 +54,16 @@ class LoginScreen extends StatelessWidget {
     }
   }
 
-  Future<String?> _signupUser(SignupData data) {
+  Future<String?> _signupUser(SignupData data) async {
     var requestBody = {
       'id': data.name,
       'password': data.password,
+      'name': data.additionalSignupData?['name'],
+      'phoneNumber': data.additionalSignupData?['phoneNumber'],
     };
+    var dio = await noAuthDio();
     return Future.delayed(loginTime).then((_) {
+      print(requestBody);
       return null;
     });
   }
@@ -76,7 +83,7 @@ class LoginScreen extends StatelessWidget {
     return Scaffold(
       body: Center(
         child: FlutterLogin(
-          onLogin: test,
+          onLogin: login,
           onSignup: _signupUser,
           hideForgotPasswordButton: true,
           additionalSignupFields: [
@@ -94,5 +101,25 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      newMethod();
+    });
+  }
+
+  newMethod() async {
+    final prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("accessToken");
+    if (token != null) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => DashBoard(),
+      ));
+    } else {
+      print("로그인 필요");
+    }
   }
 }
