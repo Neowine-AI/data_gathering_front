@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:data_gathering/Dios.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,10 +18,10 @@ class DioInterceptors extends Interceptor {
   @override
   FutureOr<dynamic> onError(DioError e, ErrorInterceptorHandler handler) async {
     final prefs = await SharedPreferences.getInstance();
-    if (e.response?.statusCode == 401) {
+    if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
       final accessToken = await prefs.getString("accessToken");
       final refreshToken = await prefs.getString("refreshToken");
-      var refreshDio = Dio();
+      var refreshDio = await authDio();
 
       refreshDio.interceptors.clear();
 
@@ -38,10 +39,9 @@ class DioInterceptors extends Interceptor {
         return handler.next(error);
       }));
       var data = {
-        "accessToken": 'Bearer $accessToken',
-        "refreshToken": "Bearer $refreshToken"
+        "accessToken": '$accessToken',
+        "refreshToken": "$refreshToken"
       };
-
       final refreshResponse = await refreshDio
           .post("http://10.0.2.2:8080/member/reissue", data: data);
     }

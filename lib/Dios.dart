@@ -1,6 +1,5 @@
 import 'package:data_gathering/dioInterceptor.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<Dio> noAuthDio() async {
@@ -20,6 +19,7 @@ Future<Dio> authDio() async {
   dio.interceptors.clear();
   dio.options.baseUrl = "http://10.0.2.2:8080";
   dio.interceptors.add(DioInterceptors());
+  dio.options.contentType = "application/json";
 
   dio.options.headers['Authorization'] =
       "Bearer ${prefs.getString("accessToken")}";
