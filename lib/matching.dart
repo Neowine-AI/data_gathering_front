@@ -1,9 +1,8 @@
-import 'dart:convert';
-
+import 'package:data_gathering/Dios.dart';
 import 'package:data_gathering/matching_detail.dart';
 import 'package:data_gathering/matching_model.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:transition/transition.dart';
@@ -22,9 +21,12 @@ class _MatchingPage extends State<MatchingPage> {
   late MatchingModel matchingModel;
   List<MatchingModel> matchings = [];
   List<Image> matchingImages = [];
+  bool showCompleted = false;
+  final RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
+
   Future<Map<String, String>> getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
-
     return {
       'Authorization': 'Bearer ${prefs.getString('accessToken')}',
     };
@@ -55,7 +57,7 @@ class _MatchingPage extends State<MatchingPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "${matchings[i].itemName}",
+                              matchings[i].itemName,
                               style: TextStyle(fontSize: 18),
                             ),
                             Text(
@@ -119,24 +121,41 @@ class _MatchingPage extends State<MatchingPage> {
         const SizedBox(height: 20),
         Container(
           height: 48,
-          child: Row(children: const [
-            Padding(
-              padding: EdgeInsets.only(left: 10),
-              child: Text(
-                "내 매칭 현황",
-                style: TextStyle(
-                  fontSize: 25,
+          child: Row(children: [
+            const Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text(
+                  "내 매칭 현황",
+                  style: TextStyle(
+                    fontSize: 25,
+                  ),
                 ),
               ),
             ),
+            Switch(
+                value: showCompleted,
+                onChanged: (value) {
+                  setState(() {
+                    showCompleted = value;
+                    loadMatchings();
+                  });
+                }),
           ]),
         ),
         Divider(
           color: Colors.black,
         ),
         Expanded(
-          child: getListView(),
-        )
+          child: SmartRefresher(
+            enablePullUp: false,
+            enablePullDown: true,
+            controller: _refreshController,
+            onRefresh: () =>
+                {loadMatchings(), _refreshController.refreshCompleted()},
+            child: getListView(),
+          ),
+        ),
       ],
     ));
   }
@@ -153,11 +172,10 @@ class _MatchingPage extends State<MatchingPage> {
       'status': "WAIT",
     };
     List<Image> imageList = [];
-
+    var dio = await authDio();
     var dataURL = Uri.http("10.0.2.2:8080", "/matching");
-    http.Response response = await http.get(dataURL, headers: header);
-    List body = jsonDecode(utf8.decode(response.bodyBytes));
-    final dio = Dio();
+    var response = await dio.get('/matching');
+    List body = response.data;
     for (var element in body) {
       final response = await dio.get(
           "http://10.0.2.2:8080/matching/image/${element['id']}",
