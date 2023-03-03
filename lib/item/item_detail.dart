@@ -1,12 +1,12 @@
 import 'dart:ffi';
 import 'dart:io';
-import 'package:data_gathering/dioInterceptor.dart';
+import 'package:data_gathering/dio/dioInterceptor.dart';
 import 'package:data_gathering/main.dart';
 import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:data_gathering/item_model.dart';
+import 'package:data_gathering/item/item_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:photo_view/photo_view.dart';

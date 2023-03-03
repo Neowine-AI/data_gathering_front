@@ -1,6 +1,6 @@
-import 'package:data_gathering/Dios.dart';
-import 'package:data_gathering/matching_detail.dart';
-import 'package:data_gathering/matching_model.dart';
+import 'package:data_gathering/dio/Dios.dart';
+import 'package:data_gathering/matching/matching_detail.dart';
+import 'package:data_gathering/matching/matching_model.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -172,7 +172,7 @@ class _MatchingPage extends State<MatchingPage> {
       'status': "WAIT",
     };
     List<Image> imageList = [];
-    var dio = await authDio();
+    var dio = await authDio(context);
     var dataURL = Uri.http("10.0.2.2:8080", "/matching");
     var response = await dio.get('/matching');
     List body = response.data;

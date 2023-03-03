@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:data_gathering/dashboard.dart';
 
-import 'package:data_gathering/Dios.dart';
+import 'package:data_gathering/dio/Dios.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
@@ -27,7 +27,7 @@ class _LoginPage extends State<LoginScreen> {
 
   Future<String?> login(LoginData data) async {
     var requestBody = {'id': data.name, 'password': data.password};
-    var dio = await noAuthDio();
+    var dio = await noAuthDio(context);
     dio.interceptors.add(
       InterceptorsWrapper(
         onResponse: (response, handler) async {
@@ -61,7 +61,7 @@ class _LoginPage extends State<LoginScreen> {
       'name': data.additionalSignupData?['name'],
       'phoneNumber': data.additionalSignupData?['phoneNumber'],
     };
-    var dio = await noAuthDio();
+    var dio = await noAuthDio(context);
     return Future.delayed(loginTime).then((_) {
       print(requestBody);
       return null;

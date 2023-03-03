@@ -1,6 +1,6 @@
-import 'package:data_gathering/Dios.dart';
-import 'package:data_gathering/item_model.dart';
-import 'package:data_gathering/matching_model.dart';
+import 'package:data_gathering/dio/Dios.dart';
+import 'package:data_gathering/item/item_model.dart';
+import 'package:data_gathering/matching/matching_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -9,7 +9,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transition/transition.dart';
 
-import 'main.dart';
+import '../main.dart';
 
 class MatchingDetailPage extends StatefulWidget {
   final MatchingModel matchingModel;
@@ -44,8 +44,8 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
 
   loadImage() async {
     Map<String, Image> imageList = {};
-    final matchingDio = await authDio();
-    final itemDio = await noAuthDio();
+    final matchingDio = await authDio(context);
+    final itemDio = await noAuthDio(context);
     var response = await matchingDio.get(
       "/matching/${widget.matchingModel.id}",
     );
@@ -55,7 +55,7 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
         options: Options(
           responseType: ResponseType.bytes,
         ));
-    final dio = await authDio();
+    final dio = await authDio(context);
     for (String angle in angles) {
       final queryParameters = {
         'angle': angle,

@@ -1,7 +1,7 @@
-import 'package:data_gathering/item_detail.dart';
-import 'package:data_gathering/item_model.dart';
-import 'package:data_gathering/login.dart';
-import 'package:data_gathering/matching.dart';
+import 'package:data_gathering/item/item_detail.dart';
+import 'package:data_gathering/item/item_model.dart';
+import 'package:data_gathering/login/login.dart';
+import 'package:data_gathering/matching/matching.dart';
 
 import 'package:flutter/material.dart';
 
