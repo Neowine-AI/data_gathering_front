@@ -21,7 +21,7 @@ class _MatchingPage extends State<MatchingPage> {
   late MatchingModel matchingModel;
   List<MatchingModel> matchings = [];
   List<Image> matchingImages = [];
-  bool showCompleted = false;
+  Status status = Status.WAIT;
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
@@ -118,7 +118,6 @@ class _MatchingPage extends State<MatchingPage> {
     return Scaffold(
         body: Column(
       children: [
-        const SizedBox(height: 20),
         Container(
           height: 48,
           child: Row(children: [
@@ -133,11 +132,25 @@ class _MatchingPage extends State<MatchingPage> {
                 ),
               ),
             ),
-            Switch(
-                value: showCompleted,
+            DropdownButton(
+                value: status,
+                items: [
+                  DropdownMenuItem(
+                    value: Status.CONFIRMED,
+                    child: Text(Status.CONFIRMED.name),
+                  ),
+                  DropdownMenuItem(
+                    value: Status.REJECTED,
+                    child: Text(Status.REJECTED.name),
+                  ),
+                  DropdownMenuItem(
+                    value: Status.WAIT,
+                    child: Text(Status.WAIT.name),
+                  )
+                ],
                 onChanged: (value) {
                   setState(() {
-                    showCompleted = value;
+                    status = value!;
                     loadMatchings();
                   });
                 }),
@@ -168,14 +181,15 @@ class _MatchingPage extends State<MatchingPage> {
 
   Future<void> loadMatchings() async {
     Map<String, String> header = await getHeaders();
+    print(status.code);
     final queryParameters = {
-      'status': "WAIT",
+      'status': status.code,
     };
     List<Image> imageList = [];
     var dio = await authDio(context);
-    var dataURL = Uri.http("10.0.2.2:8080", "/matching");
-    var response = await dio.get('/matching');
-    List body = response.data;
+    var response =
+        await dio.get('/matching/status', queryParameters: queryParameters);
+    List body = response.data['content'];
     for (var element in body) {
       final response = await dio.get(
           "http://10.0.2.2:8080/matching/image/${element['id']}",
