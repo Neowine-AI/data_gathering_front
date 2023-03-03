@@ -1,10 +1,17 @@
 import 'dart:async';
 
-import 'package:data_gathering/Dios.dart';
+import 'package:data_gathering/dio/Dios.dart';
+import 'package:data_gathering/login/login.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DioInterceptors extends Interceptor {
+  BuildContext context;
+
+  DioInterceptors({required this.context});
+
   @override
   FutureOr<dynamic> onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
@@ -21,7 +28,8 @@ class DioInterceptors extends Interceptor {
     if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
       final accessToken = await prefs.getString("accessToken");
       final refreshToken = await prefs.getString("refreshToken");
-      var refreshDio = await authDio();
+      print(accessToken);
+      var refreshDio = await authDio(context);
 
       refreshDio.interceptors.clear();
 
@@ -31,10 +39,11 @@ class DioInterceptors extends Interceptor {
         if (error.response?.statusCode == 401) {
           // 기기의 자동 로그인 정보 삭제
           await prefs.clear();
-
-          // . . .
-          // 로그인 만료 dialog 발생 후 로그인 페이지로 이동
-          // . . .
+          print("TEST");
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+          );
         }
         return handler.next(error);
       }));
@@ -44,6 +53,7 @@ class DioInterceptors extends Interceptor {
       };
       final refreshResponse = await refreshDio
           .post("http://10.0.2.2:8080/member/reissue", data: data);
+      prefs.setString("accessToken", refreshResponse.data['newAccessToken']);
     }
   }
 }
