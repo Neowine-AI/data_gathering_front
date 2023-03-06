@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:data_gathering/dio/Dios.dart';
 import 'package:data_gathering/item/item_model.dart';
 import 'package:data_gathering/matching/matching_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_flavor/flutter_flavor.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
@@ -10,6 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transition/transition.dart';
 
 import '../main.dart';
+
+enum MenuItems { delete }
 
 class MatchingDetailPage extends StatefulWidget {
   final MatchingModel matchingModel;
@@ -154,6 +159,13 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
     });
   }
 
+  void deleteMatching() async {
+    var dio = await authDio(context);
+    var response = dio.patch("/matching/delete/${widget.matchingModel.id}");
+    print(response);
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     var matchingStatus = [
@@ -174,7 +186,32 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
           ),
         ),
       ),
-      Icon(Icons.menu),
+      PopupMenuButton(
+        onSelected: (MenuItems) => showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("삭제"),
+            content: Text("매칭을 삭제하시겠습니까?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'Cancel'),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, 'OK');
+                  deleteMatching();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        ),
+        itemBuilder: (context) => <PopupMenuEntry<MenuItems>>[
+          const PopupMenuItem<MenuItems>(
+              value: MenuItems.delete, child: Text("삭제"))
+        ],
+      ),
     ];
 
     var matchingInfos = [

@@ -101,7 +101,7 @@ class _MatchingPage extends State<MatchingPage> {
                 Navigator.push(
                   context,
                   Transition(
-                      child: MatchingDetailScreen(
+                      child: MatchingDetailPage(
                         matchingModel: matchings[position],
                       ),
                       transitionEffect: TransitionEffect.BOTTOM_TO_TOP),
@@ -121,13 +121,21 @@ class _MatchingPage extends State<MatchingPage> {
         Container(
           height: 48,
           child: Row(children: [
+            Padding(
+              padding: EdgeInsets.only(left: 20),
+              child: Image(
+                image: Image.network("https://neowine.com/theme/a03/img/ci.png")
+                    .image,
+                height: 40,
+              ),
+            ),
             const Expanded(
               child: Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: Text(
-                  "내 매칭 현황",
+                  "매칭 현황",
                   style: TextStyle(
-                    fontSize: 25,
+                    fontSize: 15,
                   ),
                 ),
               ),
@@ -158,6 +166,7 @@ class _MatchingPage extends State<MatchingPage> {
         ),
         Divider(
           color: Colors.black,
+          height: 1,
         ),
         Expanded(
           child: SmartRefresher(
