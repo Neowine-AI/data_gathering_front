@@ -1,19 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:data_gathering/item/item_model.dart';
 import 'package:data_gathering/matching/matching.dart';
-import 'package:dio/dio.dart';
-import 'package:transition/transition.dart';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:flutter_flavor/flutter_flavor.dart';
 
 import 'item/item.dart';
-import 'login/login_model.dart';
-import 'main.dart';
 
 class DashBoard extends StatelessWidget {
   const DashBoard({super.key});
@@ -22,6 +11,8 @@ class DashBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      darkTheme: ThemeData.dark(),
+      // themeMode: ThemeMode.dark,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -43,13 +34,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
-  String _selected = 'TEST';
+  late String _selected = 'TEST';
   final _dropDownValues = ["TEST", "TEST2"];
-
-  final List<Widget> _widgetOptions = <Widget>[
-    const ItemPage(),
-    const MatchingPage()
-  ];
 
   @override
   void initState() {
@@ -64,44 +50,49 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var page = ItemPage(
+      category: _selected,
+    );
+    final List<Widget> _widgetOptions = <Widget>[page, const MatchingPage()];
+
     return Scaffold(
-      appBar: AppBar(
-          toolbarHeight: 40,
-          title: Image(
-            image:
-                Image.network("https://neowine.com/theme/a03/img/ci.png").image,
-          ),
-          backgroundColor: Colors.white,
-          actions: [
-            DropdownButton(
-              value: _selected,
-              items: _dropDownValues.map((e) {
-                return DropdownMenuItem(
-                  value: e,
-                  child: Text(e),
-                );
-              }).toList(),
-              onChanged: (value) => setState(() {
-                _selected = value!;
-              }),
-            ),
-            IconButton(
-              onPressed: () {
-                null;
-              },
-              icon: Icon(Icons.search),
-              color: Colors.black,
-            )
-          ]),
+      // appBar: AppBar(
+      //     toolbarHeight: 40,
+      //     title: Image(
+      //       image:
+      //           Image.network("https://neowine.com/theme/a03/img/ci.png").image,
+      //     ),
+      //     backgroundColor: Colors.white,
+      //     actions: [
+      //       DropdownButton(
+      //         value: _selected,
+      //         items: _dropDownValues.map((e) {
+      //           return DropdownMenuItem(
+      //             value: e,
+      //             child: Text(e),
+      //           );
+      //         }).toList(),
+      //         onChanged: (value) => setState(() {
+      //           _selected = value!;
+      //         }),
+      //       ),
+      //       IconButton(
+      //         onPressed: () {
+      //           null;
+      //         },
+      //         icon: Icon(Icons.search),
+      //         color: Colors.black,
+      //       )
+      //     ]),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: '아이템',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.photo_camera),
-            label: 'matching',
+            label: '매칭 현황',
           ),
         ],
         selectedItemColor: Colors.amber[800],

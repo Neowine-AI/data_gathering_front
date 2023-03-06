@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:data_gathering/item/item_detail.dart';
 import 'package:dio/dio.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_flavor/flutter_flavor.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:http/http.dart' as http;
 import 'package:transition/transition.dart';
@@ -11,7 +13,8 @@ import '../main.dart';
 import 'item_model.dart';
 
 class ItemPage extends StatefulWidget {
-  const ItemPage({super.key});
+  String category;
+  ItemPage({super.key, required this.category});
 
   @override
   State<ItemPage> createState() {
@@ -35,7 +38,6 @@ class _ItemPage extends State<ItemPage> {
     if (widgets.length == 0) {
       return true;
     }
-
     return false;
   }
 
@@ -60,48 +62,55 @@ class _ItemPage extends State<ItemPage> {
   Widget getItemBody() {
     return Column(
       children: [
-        Row(children: [
-          getDropDownMenu(),
-          Expanded(
-            child: Text(
-              _selected,
-              style: TextStyle(fontSize: 25),
+        Container(
+          height: 48,
+          child: Row(children: [
+            Padding(
+              padding: EdgeInsets.only(left: 20),
+              child: Image(
+                image: Image.network(
+                  "https://neowine.com/theme/a03/img/ci.png",
+                ).image,
+                height: 40,
+              ),
             ),
-          ),
-          Container(
-            width: 120,
-            height: 30,
-            child: TextField(
-                maxLines: 1,
-                minLines: 1,
-                decoration: const InputDecoration(
-                  labelText: '검색어',
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                    borderSide: BorderSide(width: 1, color: Colors.blue),
+            Expanded(child: getDropDownMenu()),
+            Container(
+              width: 120,
+              height: 30,
+              child: TextField(
+                  maxLines: 1,
+                  minLines: 1,
+                  decoration: const InputDecoration(
+                    labelText: '검색어',
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                      borderSide: BorderSide(width: 1, color: Colors.blue),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                      borderSide: BorderSide(width: 1, color: Colors.blue),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    ),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                    borderSide: BorderSide(width: 1, color: Colors.blue),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    query = value;
-                  });
-                }),
-          ),
-          IconButton(
-              onPressed: () {
-                loadData(_selected);
-              },
-              icon: Icon(Icons.search)),
-        ]),
+                  onChanged: (value) {
+                    setState(() {
+                      query = value;
+                    });
+                  }),
+            ),
+            IconButton(
+                onPressed: () {
+                  loadData(_selected);
+                },
+                icon: Icon(Icons.search)),
+          ]),
+        ),
         const Divider(
           color: Colors.black,
+          height: 1,
         ),
         Expanded(child: getBody())
       ],
@@ -118,7 +127,7 @@ class _ItemPage extends State<ItemPage> {
                     .then((value) => Navigator.push(
                           context,
                           Transition(
-                            child: ItemScreen(
+                            child: ItemDetailPage(
                               itemModel: itemModel,
                               image: images[position],
                             ),
@@ -162,7 +171,7 @@ class _ItemPage extends State<ItemPage> {
                 Text(
                   "${widgets[i]['modelName']}",
                   textAlign: TextAlign.left,
-                  style: const TextStyle(fontSize: 12, color: Colors.black38),
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
                 ),
               ],
             ),
@@ -175,8 +184,8 @@ class _ItemPage extends State<ItemPage> {
   getDropDownMenu() {
     return Padding(
       padding: EdgeInsets.only(left: 10.0, right: 5.0),
-      child: Center(
-        child: DropdownButton(
+      child: Row(children: [
+        DropdownButton(
           value: _selected,
           items: _dropDownValues.map((e) {
             return DropdownMenuItem(
@@ -189,13 +198,13 @@ class _ItemPage extends State<ItemPage> {
             loadData(value);
           }),
         ),
-      ),
+      ]),
     );
   }
 
   loadData(String category) async {
     final queryParameters = {
-      'category': category,
+      'category': widget.category,
     };
     if (query != null) {
       queryParameters.addAll({'query': query!});

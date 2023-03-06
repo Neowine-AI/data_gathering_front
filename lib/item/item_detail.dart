@@ -12,21 +12,22 @@ import 'package:flutter/widgets.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ItemPage extends StatefulWidget {
+class ItemDetailPage extends StatefulWidget {
   final ItemModel itemModel;
   final Image image;
 
-  const ItemPage({super.key, required this.itemModel, required this.image});
+  const ItemDetailPage(
+      {super.key, required this.itemModel, required this.image});
 
   @override
-  State<ItemPage> createState() {
+  State<ItemDetailPage> createState() {
     return _ItemPage();
   }
 }
 
 enum Angle { front, back, top }
 
-class _ItemPage extends State<ItemPage> {
+class _ItemPage extends State<ItemDetailPage> {
   File? _image;
   File? _image_front;
   File? _image_back;
