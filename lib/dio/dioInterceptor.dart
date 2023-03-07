@@ -52,7 +52,7 @@ class DioInterceptors extends Interceptor {
         "refreshToken": "$refreshToken"
       };
       final refreshResponse = await refreshDio
-          .post("http://10.0.2.2:8080/member/reissue", data: data);
+          .post("http://dev.neowine.com/member/reissue", data: data);
       prefs.setString("accessToken", refreshResponse.data['newAccessToken']);
     }
   }

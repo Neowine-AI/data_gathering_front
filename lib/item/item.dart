@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:data_gathering/dio/Dios.dart';
 import 'package:data_gathering/item/item_detail.dart';
 import 'package:dio/dio.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flavor/flutter_flavor.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:http/http.dart' as http;
 import 'package:transition/transition.dart';
@@ -29,13 +31,116 @@ class _ItemPage extends State<ItemPage> {
   final _dropDownValues = ["TEST", "TEST2"];
   var _selected = "TEST";
   int _selectedIndex = 0;
+
   late ItemModel itemModel;
+
   String? query;
+  File? image;
+
+  final formKey = GlobalKey<FormState>();
+
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
+  Widget? getCreateItemButton() {
+    if (FlavorConfig.instance.variables["isAdmin"] == true) {
+      return FloatingActionButton(
+        onPressed: () => showDialog<String>(
+          context: context,
+          builder: (BuildContext context) => Dialog(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Text("아이템 생성"),
+                ),
+                const SizedBox(height: 15),
+                Form(
+                  key: formKey,
+                  autovalidateMode: AutovalidateMode.always,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: MediaQuery.of(context).size.width / 2,
+                        child: TextFormField(
+                            decoration: InputDecoration(labelText: '제품명')),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width / 2,
+                        child: TextFormField(
+                            decoration: InputDecoration(labelText: '모델명')),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width / 2,
+                        child: DropdownButtonFormField(
+                          decoration: InputDecoration(labelText: '카테고리'),
+                          items: _dropDownValues.map((e) {
+                            return DropdownMenuItem(
+                              value: e,
+                              child: Text(e),
+                            );
+                          }).toList(),
+                          onChanged: (value) {},
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                          width: MediaQuery.of(context).size.width / 2,
+                          height: 100,
+                          decoration: BoxDecoration(
+                              image: DecorationImage(
+                            image: image == null
+                                ? Image.asset("assets/images/image.png").image
+                                : FileImage(File(image!.path)),
+                          )),
+                          child: image == null
+                              ? InkWell(
+                                  onTap: () => getImage(ImageSource.gallery),
+                                )
+                              : null),
+                    ],
+                  ),
+                ),
+                TextButton(onPressed: null, child: const Text("생성")),
+                TextButton(
+                  onPressed: () {
+                    image = null;
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        child: Icon(Icons.add),
+      );
+    } else {
+      return null;
+    }
+  }
+
+  Future createItem() async {
+    var dio = await authDio(context);
+  }
+
+  final picker = ImagePicker();
+  Future getImage(ImageSource imageSource) async {
+    final image = await picker.pickImage(source: imageSource);
+
+    setState(() {
+      if (image != null) {
+        this.image = File(image.path);
+      }
+    });
+  }
+
   showLoadingDialog() {
-    if (widgets.length == 0) {
+    if (widgets.isEmpty) {
       return true;
     }
     return false;
@@ -204,20 +309,20 @@ class _ItemPage extends State<ItemPage> {
 
   loadData(String category) async {
     final queryParameters = {
-      'category': widget.category,
+      'category': category,
     };
     if (query != null) {
       queryParameters.addAll({'query': query!});
     }
     List<Image> imageList = [];
 
-    var dataURL = Uri.http("10.0.2.2:8080", "/item", queryParameters);
+    var dataURL = Uri.http("dev.neowine.com", "/item", queryParameters);
     http.Response response = await http.get(dataURL);
     List items = jsonDecode(utf8.decode(response.bodyBytes))['content'];
     final dio = Dio();
     for (var element in items) {
       final response = await dio.get(
-          "http://10.0.2.2:8080/item/image/${element['itemId']}",
+          "http://dev.neowine.com/item/image/${element['itemId']}",
           options: Options(responseType: ResponseType.bytes));
 
       Image image = response.data == null
@@ -233,7 +338,7 @@ class _ItemPage extends State<ItemPage> {
   }
 
   Future<dynamic> getOneItem(int id) async {
-    var dataURL = Uri.http("10.0.2.2:8080", "/item/$id");
+    var dataURL = Uri.http("dev.neowine.com", "/item/$id");
     http.Response response = await http.get(dataURL);
     var body = jsonDecode(utf8.decode(response.bodyBytes));
     ItemModel itemModel = ItemModel(
@@ -256,6 +361,9 @@ class _ItemPage extends State<ItemPage> {
 
   @override
   Widget build(BuildContext context) {
-    return getItemBody();
+    return Scaffold(
+      body: getItemBody(),
+      floatingActionButton: getCreateItemButton(),
+    );
   }
 }

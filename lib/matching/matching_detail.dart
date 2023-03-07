@@ -66,7 +66,7 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
         'angle': angle,
       };
       final response =
-          await dio.get("http://10.0.2.2:8080/matching/image/${body['id']}",
+          await dio.get("http://dev.neowine.com/matching/image/${body['id']}",
               queryParameters: queryParameters,
               options: Options(
                 responseType: ResponseType.bytes,

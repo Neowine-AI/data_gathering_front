@@ -89,7 +89,9 @@ class _ItemPage extends State<ItemDetailPage> {
     final image = await picker.pickImage(source: imageSource);
 
     setState(() {
-      _images[selectedIndex] = File(image!.path);
+      if (image != null) {
+        _images[selectedIndex] = File(image.path);
+      }
     });
   }
 
@@ -277,7 +279,7 @@ class _ItemPage extends State<ItemDetailPage> {
       dio.options.contentType = 'multipart/form-data';
       dio.options.maxRedirects.isFinite;
       dio.options.queryParameters = {'itemId': widget.itemModel.id};
-      await dio.post("http://10.0.2.2:8080/matching", data: input);
+      await dio.post("http://dev.neowine.com/matching", data: input);
     } catch (e) {
       print(e);
     }
