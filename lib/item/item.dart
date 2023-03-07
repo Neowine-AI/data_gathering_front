@@ -167,6 +167,9 @@ class _ItemPage extends State<ItemPage> {
   Widget getItemBody() {
     return Column(
       children: [
+        SizedBox(
+          height: 30,
+        ),
         Container(
           height: 48,
           child: Row(children: [

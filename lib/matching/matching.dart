@@ -118,6 +118,9 @@ class _MatchingPage extends State<MatchingPage> {
     return Scaffold(
         body: Column(
       children: [
+        SizedBox(
+          height: 30,
+        ),
         Container(
           height: 48,
           child: Row(children: [
