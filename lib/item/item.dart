@@ -1,5 +1,5 @@
 import 'package:data_gathering/dio/Dios.dart';
-import 'package:data_gathering/item/item_detail.dart ';
+import 'package:data_gathering/item/item_detail.dart';
 import 'package:extended_image/extended_image.dart' hide MultipartFile;
 import 'package:flutter/material.dart';
 import 'package:flutter_flavor/flutter_flavor.dart';

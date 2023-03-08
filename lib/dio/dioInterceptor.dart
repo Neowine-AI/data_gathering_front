@@ -18,7 +18,7 @@ class DioInterceptors extends Interceptor {
     final prefs = await SharedPreferences.getInstance();
 
     options.headers['Authorization'] =
-        "Bearer ${prefs.getString("accessToken")} 12";
+        "Bearer ${prefs.getString("accessToken")}";
     return handler.next(options);
   }
 
