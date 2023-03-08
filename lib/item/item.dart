@@ -348,37 +348,37 @@ class _ItemPage extends State<ItemPage> {
       queryParameters.addAll({'query': query!});
     }
     List<Image> imageList = [];
-
-    var dataURL = Uri.http("dev.neowine.com", "/item", queryParameters);
-    http.Response response = await http.get(dataURL);
-    List items = jsonDecode(utf8.decode(response.bodyBytes))['content'];
-    final dio = Dio();
+    var dio = await noAuthDio(context);
+    var response = await dio.get('/item', queryParameters: queryParameters);
+    List items = response.data['content'];
+    Image image;
     for (var element in items) {
-      final response = await dio.get(
-          "http://dev.neowine.com/item/image/${element['itemId']}",
-          options: Options(responseType: ResponseType.bytes));
+      if (element['imageId'] == null) {
+        image = Image.asset("assets/images/image.png");
+      } else {
+        final response = await dio.get(
+            "http://dev.neowine.com/item/image/${element['itemId']}",
+            options: Options(responseType: ResponseType.bytes));
 
-      Image image = response.data == null
-          ? Image.asset("assets/images/image.png")
-          : Image.memory(response.data, fit: BoxFit.cover);
+        image = Image.memory(response.data, fit: BoxFit.cover);
+      }
       imageList.add(image);
     }
 
     setState(() {
-      widgets = jsonDecode(utf8.decode(response.bodyBytes))['content'];
+      widgets = response.data['content'];
       images = imageList;
     });
   }
 
   Future<dynamic> getOneItem(int id) async {
-    var dataURL = Uri.http("dev.neowine.com", "/item/$id");
-    http.Response response = await http.get(dataURL);
-    var body = jsonDecode(utf8.decode(response.bodyBytes));
+    var dio = await noAuthDio(context);
+    var response = await dio.get("/item/$id");
     ItemModel itemModel = ItemModel(
-        id: body["itemId"],
-        articleName: body["articleName"],
-        modelName: body["modelName"],
-        resolved: body["resolved"]);
+        id: response.data["itemId"],
+        articleName: response.data["articleName"],
+        modelName: response.data["modelName"],
+        resolved: response.data["resolved"]);
 
     setState(() {
       this.itemModel = itemModel;
