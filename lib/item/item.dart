@@ -149,7 +149,7 @@ class _ItemPage extends State<ItemPage> {
     final List<MultipartFile> files = [MultipartFile.fromFileSync(image!.path)];
 
     queryParams['images'] = [
-      image,
+      files,
     ];
     var body = FormData.fromMap(queryParams);
 
