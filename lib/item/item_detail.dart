@@ -1,6 +1,4 @@
-import 'dart:ffi';
 import 'dart:io';
-import 'package:data_gathering/dio/dioInterceptor.dart';
 import 'package:data_gathering/main.dart';
 import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -8,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:data_gathering/item/item_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -133,9 +130,16 @@ class _ItemPage extends State<ItemDetailPage> {
             Container(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.width / 1.5,
-              child: PhotoView(
-                imageProvider: widget.image.image,
-                maxScale: PhotoViewComputedScale.covered * 1,
+              child: Stack(
+                children: [
+                  PhotoView(
+                    imageProvider: widget.image.image,
+                    maxScale: PhotoViewComputedScale.covered * 1,
+                  ),
+                  BackButton(
+                    color: Colors.white,
+                  ),
+                ],
               ),
             ),
             const SizedBox(
