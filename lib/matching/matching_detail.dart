@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:data_gathering/dio/Dios.dart';
+import 'package:data_gathering/item/item.dart';
+import 'package:data_gathering/item/item_detail.dart';
 import 'package:data_gathering/item/item_model.dart';
 import 'package:data_gathering/matching/matching_model.dart';
 import 'package:dio/dio.dart';
@@ -14,7 +16,15 @@ import 'package:transition/transition.dart';
 
 import '../main.dart';
 
-enum MenuItems { delete }
+enum MenuItems {
+  delete('delete', "삭제"),
+  confirm('confirm', "승인"),
+  reject('reject', "반려");
+
+  const MenuItems(this.code, this.name);
+  final String code;
+  final String name;
+}
 
 class MatchingDetailPage extends StatefulWidget {
   final MatchingModel matchingModel;
@@ -166,6 +176,75 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
     Navigator.pop(context);
   }
 
+  PopupMenuItem<MenuItems> menuItem(MenuItems menu) {
+    return PopupMenuItem<MenuItems>(value: menu, child: Text(menu.name));
+  }
+
+  AlertDialog getDialog(MenuItems menu, BuildContext context) {
+    switch (menu) {
+      case MenuItems.delete:
+        return AlertDialog(
+          title: Text("삭제"),
+          content: Text("매칭을 삭제하시겠습니까?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, 'OK');
+                deleteMatching();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      case MenuItems.confirm:
+        return AlertDialog(
+          title: Text("승인"),
+          content: Text("매칭을 승인하시겠습니까?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, 'OK');
+
+                //confirmMatching();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      case MenuItems.reject:
+        return AlertDialog(
+          title: Text("반려"),
+          content: Text("매칭을 반려하시겠습니까?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, 'OK');
+
+                //rejectMatching();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      default:
+        return AlertDialog(
+          title: Text(""),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var matchingStatus = [
@@ -187,29 +266,13 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
         ),
       ),
       PopupMenuButton(
-        onSelected: (MenuItems) => showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("삭제"),
-            content: Text("매칭을 삭제하시겠습니까?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, 'Cancel'),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context, 'OK');
-                  deleteMatching();
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        ),
+        onSelected: (menuitmes) => showDialog(
+            context: context,
+            builder: (context) => getDialog(menuitmes, context)),
         itemBuilder: (context) => <PopupMenuEntry<MenuItems>>[
-          const PopupMenuItem<MenuItems>(
-              value: MenuItems.delete, child: Text("삭제"))
+          menuItem(MenuItems.confirm),
+          menuItem(MenuItems.reject),
+          menuItem(MenuItems.delete)
         ],
       ),
     ];
@@ -251,6 +314,9 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
           ? Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                SizedBox(
+                  height: 30,
+                ),
                 Stack(
                   children: [
                     Container(
@@ -258,6 +324,7 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
                       height: MediaQuery.of(context).size.width,
                       child: getPhotoGallery(),
                     ),
+                    BackButton(color: Colors.white),
                     Container(
                       width: MediaQuery.of(context).size.width,
                       height: MediaQuery.of(context).size.width,
@@ -287,7 +354,7 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
                             Navigator.push(
                               context,
                               Transition(
-                                child: ItemScreen(
+                                child: ItemDetailPage(
                                   itemModel: item,
                                   image: itemImage,
                                 ),
