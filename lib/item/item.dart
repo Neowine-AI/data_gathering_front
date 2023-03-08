@@ -1,17 +1,13 @@
-import 'dart:convert';
-
 import 'package:data_gathering/dio/Dios.dart';
-import 'package:data_gathering/item/item_detail.dart';
-import 'package:dio/dio.dart';
-import 'package:extended_image/extended_image.dart';
+import 'package:data_gathering/item/item_detail.dart ';
+import 'package:extended_image/extended_image.dart' hide MultipartFile;
 import 'package:flutter/material.dart';
 import 'package:flutter_flavor/flutter_flavor.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:http/http.dart' as http;
 import 'package:transition/transition.dart';
+import 'package:dio/dio.dart';
 
-import '../main.dart';
 import 'item_model.dart';
 
 class ItemPage extends StatefulWidget {
@@ -38,6 +34,7 @@ class _ItemPage extends State<ItemPage> {
   File? image;
 
   final formKey = GlobalKey<FormState>();
+  Map<String, dynamic> queryParams = {};
 
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
@@ -65,16 +62,33 @@ class _ItemPage extends State<ItemPage> {
                       Container(
                         width: MediaQuery.of(context).size.width / 2,
                         child: TextFormField(
-                            decoration: InputDecoration(labelText: '제품명')),
+                          decoration: InputDecoration(labelText: '제품명'),
+                          onSaved: (articleName) => setState(
+                            () {
+                              queryParams['articleName'] = articleName;
+                            },
+                          ),
+                        ),
                       ),
                       Container(
                         width: MediaQuery.of(context).size.width / 2,
                         child: TextFormField(
-                            decoration: InputDecoration(labelText: '모델명')),
+                          decoration: InputDecoration(labelText: '모델명'),
+                          onSaved: (modelName) => setState(
+                            () {
+                              queryParams['modelName'] = modelName;
+                            },
+                          ),
+                        ),
                       ),
                       Container(
                         width: MediaQuery.of(context).size.width / 2,
                         child: DropdownButtonFormField(
+                          onSaved: (category) => setState(
+                            () {
+                              queryParams['category'] = category;
+                            },
+                          ),
                           decoration: InputDecoration(labelText: '카테고리'),
                           items: _dropDownValues.map((e) {
                             return DropdownMenuItem(
@@ -105,13 +119,18 @@ class _ItemPage extends State<ItemPage> {
                     ],
                   ),
                 ),
-                TextButton(onPressed: null, child: const Text("생성")),
-                TextButton(
-                  onPressed: () {
-                    image = null;
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Close'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(onPressed: createItem, child: const Text("생성")),
+                    TextButton(
+                      onPressed: () {
+                        image = null;
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Close'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -126,6 +145,17 @@ class _ItemPage extends State<ItemPage> {
 
   Future createItem() async {
     var dio = await authDio(context);
+    formKey.currentState!.save();
+    final List<MultipartFile> files = [MultipartFile.fromFileSync(image!.path)];
+
+    queryParams['images'] = [
+      image,
+    ];
+    var body = FormData.fromMap(queryParams);
+
+    dio.options.contentType = "multipart/form-data";
+    await dio.post("/item", data: body);
+    image = null;
   }
 
   final picker = ImagePicker();
