@@ -176,6 +176,13 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
     Navigator.pop(context);
   }
 
+  void confirmMatching() async {
+    var dio = await authDio(context);
+    var response = dio
+        .post("/matching/confirm", data: {"itemId": widget.matchingModel.id});
+    Navigator.pop(context);
+  }
+
   PopupMenuItem<MenuItems> menuItem(MenuItems menu) {
     return PopupMenuItem<MenuItems>(value: menu, child: Text(menu.name));
   }
@@ -213,7 +220,7 @@ class _MatchingDetailPage extends State<MatchingDetailPage> {
               onPressed: () {
                 Navigator.pop(context, 'OK');
 
-                //confirmMatching();
+                confirmMatching();
               },
               child: const Text('OK'),
             ),
