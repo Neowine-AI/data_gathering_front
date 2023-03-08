@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../dio/Dios.dart';
+
 class ItemDetailPage extends StatefulWidget {
   final ItemModel itemModel;
   final Image image;
@@ -162,14 +164,18 @@ class _ItemPage extends State<ItemDetailPage> {
                 style: TextStyle(fontSize: 18),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                showImage(0),
-                showImage(1),
-                showImage(2),
-              ],
-            ),
+            widget.itemModel.resolved
+                ? SizedBox(
+                    height: 50,
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      showImage(0),
+                      showImage(1),
+                      showImage(2),
+                    ],
+                  ),
             SizedBox(
               height: 50.0,
             ),
@@ -207,11 +213,8 @@ class _ItemPage extends State<ItemDetailPage> {
                     .toList();
                 var data = FormData.fromMap({'images': files});
                 createMatching(data);
-                Navigator.push(
+                Navigator.pop(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => MyApp(),
-                  ),
                 );
               }
             : null,
@@ -242,50 +245,11 @@ class _ItemPage extends State<ItemDetailPage> {
 
   Future<dynamic> createMatching(dynamic input) async {
     final prefs = await SharedPreferences.getInstance();
-    var dio = Dio();
-    dio.interceptors.clear();
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          options.headers['Authorization'] =
-              "Bearer ${prefs.getString("accessToken")}";
-          return handler.next(options);
-        },
-        onError: (e, handler) async {
-          if (e.response?.statusCode == 401) {
-            final accessToken = await prefs.getString("accessToken");
-            final refreshToken = await prefs.getString("refreshToken");
-            var refreshDio = Dio();
+    var dio = await authDio(context);
 
-            refreshDio.interceptors.clear();
-
-            refreshDio.interceptors
-                .add(InterceptorsWrapper(onError: (error, handler) async {
-              // 다시 인증 오류가 발생했을 경우: RefreshToken의 만료
-              if (error.response?.statusCode == 401) {
-                // 기기의 자동 로그인 정보 삭제
-                await prefs.clear();
-
-                // . . .
-                // 로그인 만료 dialog 발생 후 로그인 페이지로 이동
-                // . . .
-              }
-              return handler.next(error);
-            }));
-
-            refreshDio.options.headers['Authorization'] = 'Bearer $accessToken';
-            refreshDio.options.headers['Refresh'] = 'Bearer $refreshToken';
-          }
-        },
-      ),
-    );
-    try {
-      dio.options.contentType = 'multipart/form-data';
-      dio.options.maxRedirects.isFinite;
-      dio.options.queryParameters = {'itemId': widget.itemModel.id};
-      await dio.post("http://dev.neowine.com/matching", data: input);
-    } catch (e) {
-      print(e);
-    }
+    dio.options.contentType = 'multipart/form-data';
+    dio.options.maxRedirects.isFinite;
+    dio.options.queryParameters = {'itemId': widget.itemModel.id};
+    await dio.post("http://dev.neowine.com/matching", data: input);
   }
 }
