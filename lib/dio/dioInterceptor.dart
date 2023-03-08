@@ -31,7 +31,7 @@ class DioInterceptors extends Interceptor {
       print(accessToken);
       var refreshDio = new Dio();
       refreshDio.options.baseUrl = "http://dev.neowine.com";
-  refreshDio.options.contentType = "application/json";
+      refreshDio.options.contentType = "application/json";
 
       refreshDio.interceptors.clear();
 
