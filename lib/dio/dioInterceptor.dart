@@ -29,7 +29,9 @@ class DioInterceptors extends Interceptor {
       final accessToken = await prefs.getString("accessToken");
       final refreshToken = await prefs.getString("refreshToken");
       print(accessToken);
-      var refreshDio = await authDio(context);
+      var refreshDio = new Dio();
+      refreshDio.options.baseUrl = "http://dev.neowine.com";
+      refreshDio.options.contentType = "application/json";
 
       refreshDio.interceptors.clear();
 
@@ -45,7 +47,6 @@ class DioInterceptors extends Interceptor {
             MaterialPageRoute(builder: (context) => LoginScreen()),
           );
         }
-        return handler.next(error);
       }));
       var data = {
         "accessToken": '$accessToken',
@@ -54,6 +55,8 @@ class DioInterceptors extends Interceptor {
       final refreshResponse = await refreshDio
           .post("http://dev.neowine.com/member/reissue", data: data);
       prefs.setString("accessToken", refreshResponse.data['newAccessToken']);
+
+      return handler.next(e);
     }
   }
 }
