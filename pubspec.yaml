@@ -30,7 +30,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.5
   image: ^4.0.15
   shared_preferences: 2.0.7
   image_picker: ^0.8.6+1
