@@ -1,8 +1,11 @@
 import 'package:data_gathering/matching/matching.dart';
+import 'package:data_gathering/user/my_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flavor/flutter_flavor.dart';
 
+import 'dio/Dios.dart';
 import 'item/item.dart';
+import 'user/user_model.dart';
 
 class DashBoard extends StatelessWidget {
   const DashBoard({super.key});
@@ -53,7 +56,11 @@ class _MyHomePageState extends State<MyHomePage> {
     var page = ItemPage(
       category: _selected,
     );
-    final List<Widget> _widgetOptions = <Widget>[page, const MatchingPage()];
+    final List<Widget> _widgetOptions = <Widget>[
+      page,
+      const MatchingPage(),
+      MyPage()
+    ];
 
     return Scaffold(
       // appBar: AppBar(
@@ -93,6 +100,10 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.photo_camera),
             label: '매칭 현황',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '내 정보',
           ),
         ],
         selectedItemColor: Colors.amber[800],
