@@ -30,7 +30,7 @@ class DioInterceptors extends Interceptor {
       final refreshToken = await prefs.getString("refreshToken");
       print(accessToken);
       var refreshDio = new Dio();
-      refreshDio.options.baseUrl = "http://dev.neowine.com";
+      refreshDio.options.baseUrl = "http://data.neowine.com";
       refreshDio.options.contentType = "application/json";
 
       refreshDio.interceptors.clear();
@@ -53,7 +53,7 @@ class DioInterceptors extends Interceptor {
         "refreshToken": "$refreshToken"
       };
       final refreshResponse = await refreshDio
-          .post("http://dev.neowine.com/member/reissue", data: data);
+          .post("http://data.neowine.com/member/reissue", data: data);
       prefs.setString("accessToken", refreshResponse.data['newAccessToken']);
 
       return handler.next(e);

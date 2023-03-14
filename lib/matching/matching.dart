@@ -2,6 +2,7 @@ import 'package:data_gathering/dio/Dios.dart';
 import 'package:data_gathering/matching/matching_detail.dart';
 import 'package:data_gathering/matching/matching_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_flavor/flutter_flavor.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
@@ -143,7 +144,9 @@ class _MatchingPage extends State<MatchingPage> {
                 ),
               ),
             ),
-            DropdownButton(
+            Padding(
+              padding: EdgeInsets.only(right: 10),
+              child: DropdownButton(
                 value: status,
                 items: [
                   DropdownMenuItem(
@@ -164,7 +167,9 @@ class _MatchingPage extends State<MatchingPage> {
                     status = value!;
                     loadMatchings();
                   });
-                }),
+                },
+              ),
+            ),
           ]),
         ),
         Divider(
@@ -172,14 +177,16 @@ class _MatchingPage extends State<MatchingPage> {
           height: 1,
         ),
         Expanded(
-          child: SmartRefresher(
-            enablePullUp: false,
-            enablePullDown: true,
-            controller: _refreshController,
-            onRefresh: () =>
-                {loadMatchings(), _refreshController.refreshCompleted()},
-            child: getListView(),
-          ),
+          child: matchings.isNotEmpty
+              ? SmartRefresher(
+                  enablePullUp: false,
+                  enablePullDown: true,
+                  controller: _refreshController,
+                  onRefresh: () =>
+                      {loadMatchings(), _refreshController.refreshCompleted()},
+                  child: getListView(),
+                )
+              : Center(child: Text("검색 결과가 없습니다.")),
         ),
       ],
     ));
@@ -193,18 +200,18 @@ class _MatchingPage extends State<MatchingPage> {
 
   Future<void> loadMatchings() async {
     Map<String, String> header = await getHeaders();
-    print(status.code);
     final queryParameters = {
       'status': status.code,
     };
     List<Image> imageList = [];
     var dio = await authDio(context);
-    var response =
-        await dio.get('/matching/status', queryParameters: queryParameters);
+    var response = FlavorConfig.instance.variables['isAdmin'] == false
+        ? await dio.get('/matching/status', queryParameters: queryParameters)
+        : await dio.get('/matching/all', queryParameters: queryParameters);
     List body = response.data['content'];
     for (var element in body) {
       final response = await dio.get(
-          "http://dev.neowine.com/matching/image/${element['id']}",
+          "http://data.neowine.com/matching/image/${element['id']}",
           options: Options(responseType: ResponseType.bytes, headers: header));
       Image image = Image.memory(response.data);
       imageList.add(image);

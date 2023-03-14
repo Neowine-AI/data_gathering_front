@@ -122,7 +122,12 @@ class _ItemPage extends State<ItemPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TextButton(onPressed: createItem, child: const Text("생성")),
+                    TextButton(
+                        onPressed: () {
+                          createItem();
+                          Navigator.pop(context);
+                        },
+                        child: const Text("생성")),
                     TextButton(
                       onPressed: () {
                         image = null;
@@ -357,7 +362,7 @@ class _ItemPage extends State<ItemPage> {
         image = Image.asset("assets/images/image.png");
       } else {
         final response = await dio.get(
-            "http://dev.neowine.com/item/image/${element['itemId']}",
+            "http://data.neowine.com/item/image/${element['itemId']}",
             options: Options(responseType: ResponseType.bytes));
 
         image = Image.memory(response.data, fit: BoxFit.cover);

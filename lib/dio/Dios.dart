@@ -7,7 +7,7 @@ Future<Dio> noAuthDio(BuildContext context) async {
   var dio = Dio();
 
   dio.interceptors.clear();
-  dio.options.baseUrl = "http://dev.neowine.com";
+  dio.options.baseUrl = "http://data.neowine.com";
   dio.options.contentType = "application/json";
 
   return dio;
@@ -18,7 +18,7 @@ Future<Dio> authDio(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
 
   dio.interceptors.clear();
-  dio.options.baseUrl = "http://dev.neowine.com";
+  dio.options.baseUrl = "http://data.neowine.com";
   dio.interceptors.add(DioInterceptors(context: context));
   dio.options.contentType = "application/json";
 

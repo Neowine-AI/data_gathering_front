@@ -166,7 +166,11 @@ class _ItemPage extends State<ItemDetailPage> {
             ),
             widget.itemModel.resolved
                 ? SizedBox(
-                    height: 50,
+                    height: 100,
+                    child: Text(
+                      "매칭 진행 중이거나 완료된 아이템입니다",
+                      style: TextStyle(fontSize: 20, color: Colors.black54),
+                    ),
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -250,6 +254,6 @@ class _ItemPage extends State<ItemDetailPage> {
     dio.options.contentType = 'multipart/form-data';
     dio.options.maxRedirects.isFinite;
     dio.options.queryParameters = {'itemId': widget.itemModel.id};
-    await dio.post("http://dev.neowine.com/matching", data: input);
+    await dio.post("http://data.neowine.com/matching", data: input);
   }
 }
