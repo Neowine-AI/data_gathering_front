@@ -51,6 +51,23 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
         }
+    flavorDimensions "dataGatheringApp"
+    productFlavors{
+
+        admin {
+                dimension "dataGatheringApp"
+                applicationIdSuffix ".admin"
+                resValue "string", "app_name", "admin"
+                versionNameSuffix ".admin"
+            }
+        development {
+            dimension "dataGatheringApp"
+            applicationIdSuffix ".development"
+            resValue "string", "app_name", "development"
+            versionNameSuffix ".development"
+        }
+        }
+
     }
 }
 
